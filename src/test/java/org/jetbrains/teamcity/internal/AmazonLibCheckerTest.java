@@ -1,5 +1,7 @@
 package org.jetbrains.teamcity.internal;
 
+import com.amazonaws.regions.Region;
+import com.amazonaws.regions.RegionUtils;
 import com.amazonaws.services.ec2.model.InstanceType;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
@@ -35,38 +37,59 @@ public class AmazonLibCheckerTest {
 
     public void checkAllInstancesSupported() throws IOException {
         final Set<String> supported = new HashSet<String>();
+        final Set<String> latest = new HashSet<String>();
         final File file = new File("src/test/resources/supportedInstanceTypes.txt");
         supported.addAll(FileUtils.readLines(file, Charset.defaultCharset()));
         final InstanceType[] values = InstanceType.values();
-        final Set<String> newUnsupported = new HashSet<String>();
         for (InstanceType type : values) {
-            final String typeName = type.toString();
-            logger.debug("Checking " + typeName);
-            if (supported.contains(typeName)){
-                supported.remove(typeName);
+            latest.add(type.toString());
+        }
+        checkAllEntitiesSupported(supported, latest, "instance type");
+    }
+
+    public void checkAllRegionsSupported() throws IOException {
+        final Set<String> supported = new HashSet<String>();
+        final Set<String> latest = new HashSet<String>();
+        final File file = new File("src/test/resources/supportedRegions.txt");
+        supported.addAll(FileUtils.readLines(file, Charset.defaultCharset()));
+        final List<com.amazonaws.regions.Region> ec2Regions = RegionUtils.getRegionsForService("ec2");
+        for (Region ec2Region : ec2Regions) {
+            latest.add(ec2Region.getServiceEndpoint("ec2"));
+        }
+        checkAllEntitiesSupported(supported, latest, "region");
+    }
+
+    private void checkAllEntitiesSupported(final Set<String> supported, final Set<String> latest, String entityName){
+        final Set<String> newUnsupported = new HashSet<String>();
+        for (String type : latest) {
+            logger.debug("Checking " + type);
+            if (supported.contains(type)){
+                supported.remove(type);
             } else {
-                newUnsupported.add(typeName);
+                newUnsupported.add(type);
             }
         }
         boolean fail = newUnsupported.size() > 0 || supported.size() > 0;
-        ClassLoader libLoader = InstanceType.class.getClassLoader();
-        libLoader.getResource("test.txt");
         if (fail){
             final StringBuilder failureMsg = new StringBuilder();
             if (newUnsupported.size() > 0){
-                failureMsg.append(String.format("Latest version %s has new instance types: %s", myLatestVersion, Arrays.toString(newUnsupported.toArray())));
+                failureMsg.append(String.format("Latest version %s has new %s(s): %s",
+                        myLatestVersion,
+                        entityName,
+                        Arrays.toString(newUnsupported.toArray())));
             }
             if (supported.size() >0){
                 if (failureMsg.length() > 0){
                     failureMsg.append("\n");
                 }
-                failureMsg.append(String.format("Latest version %s no longer support instance types: %s", myLatestVersion, Arrays.toString(supported.toArray())));
+                failureMsg.append(String.format("Latest version %s no longer support %s(s): %s",
+                        myLatestVersion,
+                        entityName,
+                        Arrays.toString(supported.toArray())));
             }
             Assert.fail(failureMsg.toString());
         }
     }
-
-
 
     @AfterMethod
     public void tearDown(){
