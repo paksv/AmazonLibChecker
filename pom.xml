@@ -36,7 +36,6 @@
 
     <build>
         <defaultGoal>test</defaultGoal>
-        <directory>${basedir}</directory>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
