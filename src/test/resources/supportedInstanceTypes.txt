@@ -51,3 +51,4 @@ d2.xlarge
 d2.2xlarge
 d2.4xlarge
 d2.8xlarge
+t2.nano
