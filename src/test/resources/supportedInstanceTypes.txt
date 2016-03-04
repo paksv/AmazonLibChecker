@@ -41,6 +41,7 @@ c4.8xlarge
 cc1.4xlarge
 cc2.8xlarge
 g2.2xlarge
+g2.8xlarge
 cg1.4xlarge
 r3.large
 r3.xlarge
