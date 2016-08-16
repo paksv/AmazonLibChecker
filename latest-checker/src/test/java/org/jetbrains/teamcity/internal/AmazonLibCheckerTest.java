@@ -24,6 +24,7 @@ public class AmazonLibCheckerTest {
     private static final Logger logger = Logger.getLogger(AmazonLibCheckerTest.class);
 
     private String myLatestVersion;
+    private String myCurrentVersion;
 
     @BeforeMethod
     public void setUp() throws IOException {
@@ -32,13 +33,17 @@ public class AmazonLibCheckerTest {
         final Properties props = new Properties();
         props.load(resStream);
         myLatestVersion = props.getProperty("version");
+        myCurrentVersion = System.getProperty("aws.sdk.version");
+        System.out.printf("Current AWS SDK version:%s\nLatest AWS SDK:%s\n",
+                myCurrentVersion, myLatestVersion);
     }
 
 
     public void checkAllInstancesSupported() throws IOException {
         final Set<String> supported = new HashSet<String>();
         final Set<String> latest = new HashSet<String>();
-        final File file = new File("src/test/resources/supportedInstanceTypes.txt");
+        final File file = new File("../txt/supportedInstanceTypes.txt");
+        System.out.println("Comparing instances info with " + file.getCanonicalPath());
         supported.addAll(FileUtils.readLines(file, Charset.defaultCharset()));
         final InstanceType[] values = InstanceType.values();
         for (InstanceType type : values) {
@@ -50,7 +55,8 @@ public class AmazonLibCheckerTest {
     public void checkAllRegionsSupported() throws IOException {
         final Set<String> supported = new HashSet<String>();
         final Set<String> latest = new HashSet<String>();
-        final File file = new File("src/test/resources/supportedRegions.txt");
+        final File file = new File("../txt/supportedRegions.txt");
+        System.out.println("Comparing region info with " + file.getCanonicalPath());
         supported.addAll(FileUtils.readLines(file, Charset.defaultCharset()));
         final List<com.amazonaws.regions.Region> ec2Regions = RegionUtils.getRegionsForService("ec2");
         for (Region ec2Region : ec2Regions) {
@@ -73,18 +79,20 @@ public class AmazonLibCheckerTest {
         if (fail){
             final StringBuilder failureMsg = new StringBuilder();
             if (newUnsupported.size() > 0){
-                failureMsg.append(String.format("Latest version %s has new %s(s): %s",
+                failureMsg.append(String.format("Latest version %s has new %s(s) that %s hasn't: %s",
                         myLatestVersion,
                         entityName,
+                        myCurrentVersion,
                         Arrays.toString(newUnsupported.toArray())));
             }
             if (supported.size() >0){
                 if (failureMsg.length() > 0){
                     failureMsg.append("\n");
                 }
-                failureMsg.append(String.format("Latest version %s no longer support %s(s): %s",
+                failureMsg.append(String.format("Latest version %s no longer support %s(s) that %s does: %s",
                         myLatestVersion,
                         entityName,
+                        myCurrentVersion,
                         Arrays.toString(supported.toArray())));
             }
             Assert.fail(failureMsg.toString());
