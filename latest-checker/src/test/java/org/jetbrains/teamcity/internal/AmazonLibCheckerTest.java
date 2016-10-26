@@ -29,7 +29,7 @@ public class AmazonLibCheckerTest {
     @BeforeMethod
     public void setUp() throws IOException {
         final ClassLoader libLoader = InstanceType.class.getClassLoader();
-        final InputStream resStream = libLoader.getResourceAsStream("META-INF/maven/com.amazonaws/aws-java-sdk/pom.properties");
+        final InputStream resStream = libLoader.getResourceAsStream("META-INF/maven/com.amazonaws/aws-java-sdk-ec2/pom.properties");
         final Properties props = new Properties();
         props.load(resStream);
         myLatestVersion = props.getProperty("version");
